@@ -1,7 +1,7 @@
 #Prepares Argos data to be used in SSM. Mode output then used for KDE and PVC calculation.
 #Author: Denisse Fierro Arcos
 #Version: 1
-#Date last updated: 2019-02-13
+#Date last updated: 2019-02-19
 
 rm(list = ls())
 
@@ -122,7 +122,7 @@ combinedData = combinedData[-which(combinedData$id %in% (Obs$id[which(Obs$n < 80
 rm(Obs)
 
 #Fit state-space model
-fit = fit_ssm(combinedData, model = "hDCRWS", tstep = 0.5, adapt = 10500)
+fit = fit_ssm(combinedData, model = "hDCRWS", tstep = 0.5, adapt = 10000)
 #Checking fit of model
 diag_ssm(fit)
 map_ssm(fit)
@@ -134,8 +134,21 @@ result = get_summary(fit)
 coordinates(result) = ~lon+lat
 proj4string(result) = CRS("++proj=longlat +datum=WGS84")
 crs(result) = crs(GalIslWGS84)
-# #Save result as a .csv file
-# write.csv(result, "C:/Users/Denisse/Documents/TigerSharksSatelliteDataKernels/Layers/result.csv")
+rm(combinedData)
+#Find points that fall on land using the island layer and delete them from the main database
+x = over(result, GalIslWGS84)
+#Use previous data frame to find water only points (i.e., rows with NA values) in combined dataframe
+cleanData = fit$summary[which(is.na(x$id)),]
+#Remove variables no longer needed
+rm(x)
+#Update point shapefile
+coordinates(cleanData) = ~lon+lat
+proj4string(cleanData) = CRS("++proj=longlat +datum=WGS84")
+crs(cleanData) = crs(GalIslWGS84)
+rm(result)
+# #Save result as a shapefile
+# shapefile(cleanData, "C:/Users/Denisse/Documents/TigerSharksSatelliteDataKernels/Layers/SSMresults.shp",
+#           overwrite = T)
 
 
 ############################# KERNEL DENSITY ESTIMATION USING SSM DATA #################################
@@ -143,7 +156,7 @@ library(aspace)
 library(spatialEco)
 
 #Calculate standard distance (SDD) to estimate bandwidth (h)
-coords = data.frame(lat = result$lat, lon = result$lon)
+coords = data.frame(lat = cleanData$lat, lon = cleanData$lon)
 calc_sdd(points = coords) #Calculate SDD using coordinates
 #Plot SDD with Galapagos map as background to visually check results
 plot_sdd(plotnew = T)
@@ -156,7 +169,7 @@ h = 1.06*SDDpts*(nrow(coords)^(-0.2))
 rm(coords, r.SDD, SDDpts, sddatt, sddloc)
 
 #Unweighted KDE calculation
-kde = sp.kde(x = result, bw = h, n = 10000)
+kde = sp.kde(x = cleanData, bw = h, n = 10000)
 #Remove any land areas from KDE raster
 kdeClip = raster::mask(kde, GalIslWGS84, inverse = T)
 rm(kde)
@@ -178,9 +191,43 @@ PVC[PVC == 1] = 0.95
 plot(PVC, col = heat.colors(3))
 plot(GalIslWGS84, add = T)
 
-#Save final raster as a TIF file
-writeRaster(PVC, filename = "C:/Users/Denisse/Documents/TigerSharksSatelliteDataKernels/Layers/KDEresult.tif",
-            format = "GTiff", overwrite = T)
+#Calculate area in km^2 covered by each contour
+tapply(area(PVC), PVC[], sum)
+
+# #Save final raster as a TIF file
+# writeRaster(PVC, filename = "C:/Users/Denisse/Documents/TigerSharksSatelliteDataKernels/Layers/KDEresult.tif",
+#             format = "GTiff", overwrite = T)
 
 #######################################################################################################
 
+#Calculate proportion of SSM locations within 5 and 10 km from turtle nesting beaches
+#Import locations of turtle nesting beaches
+Tort = shapefile("C:/Users/Denisse/Documents/TigerSharksSatelliteDataKernels/Layers/PlayasTortugas.shp")
+#Create buffers (5 and 10 km) using turtle nesting beaches (unit is in meters)
+x = buffer(Tort, width = 5000)
+y = buffer(Tort, width = 10000)
+#Clip out land areas using Galapagos layer
+Tort_5km = erase(x, GalIslWGS84)
+Tort_10km = erase(y, GalIslWGS84)
+#Remove unused variables
+rm(Tort, x, y)
+
+#Extract points within buffers
+Pts_5km = intersect(cleanData, Tort_5km)
+Pts_10km = intersect(cleanData, Tort_10km)
+
+#Calculate proportion of points within each buffer area
+prop5km = nrow(Pts_5km)/nrow(cleanData)
+prop10km = nrow(Pts_10km)/nrow(cleanData)
+
+# #Save all shapefiles created
+# shapefile(Pts_5km, filename = "C:/Users/Denisse/Documents/TigerSharksSatelliteDataKernels/Layers/5kmPts.shp",
+#           overwrite = T)
+# shapefile(Pts_10km, filename = "C:/Users/Denisse/Documents/TigerSharksSatelliteDataKernels/Layers/10kmPts.shp",
+#           overwrite = T)
+# shapefile(Tort_5km, filename = "C:/Users/Denisse/Documents/TigerSharksSatelliteDataKernels/Layers/5kmBuff.shp",
+#           overwrite = T)
+# shapefile(Tort_10km, filename = "C:/Users/Denisse/Documents/TigerSharksSatelliteDataKernels/Layers/10kmBuff.shp",
+#           overwrite = T)
+# shapefile(result, filename = "C:/Users/Denisse/Documents/TigerSharksSatelliteDataKernels/Layers/SSMresults.shp", 
+          # overwrite = T)
