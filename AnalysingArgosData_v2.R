@@ -186,8 +186,11 @@ PVC[PVC == 1] = 0.95
 plot(PVC, col = heat.colors(3))
 plot(GalIslUTM, add = T)
 
-#Calculate area in km^2 covered by each contour
+#Calculate area in m^2 covered by each contour
 tapply(area(PVC), PVC[], sum)
+#Could also calculate area by adding all pixels from each category and multiply
+#this by the resolution of the raster. The area will be in m^2
+res(PVC)[1] * res(PVC)[2] * table(PVC[])
 
 #######################################################################################################
 
