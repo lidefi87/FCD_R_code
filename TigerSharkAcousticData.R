@@ -93,11 +93,12 @@ TigerAcoustic$VEMCOcode = factor(TigerAcoustic$VEMCOcode, levels = unique(TigerA
 # dev.off()
 
 #Using ggplot
-library(ggplot)
+library(ggplot2)
 TigerAcoustic2 = TigerAcoustic
 #Change Date column to Date format
 TigerAcoustic2$Date = as.Date(TigerAcoustic2$Date)
 #Create plot with Years as major breaks and Months as minor breaks
 ggplot(TigerAcoustic2, mapping = aes(x = Date, y = VEMCOcode))+geom_point()+theme_bw()+labs(y = "Acoustic Tag ID")+
-  scale_x_date(date_breaks = "year", date_minor_breaks = "month", date_labels = "%Y")
+  scale_x_date(date_breaks = "year", date_minor_breaks = "month", date_labels = "%Y")+
+  theme(text = element_text(size = 14, family = "sans"))
 rm(TigerAcoustic2)
