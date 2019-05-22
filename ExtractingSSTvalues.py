@@ -95,7 +95,7 @@ SST_RMPtVal = pd.ExcelFile("SST_RMValues.xls")
 #Load relevant excel sheet
 SST_sheet = SST_RMPtVal.parse('SST_RMValues')
 #Create dictionary to change column names to months
-NewColNames = dict(zip(SST_sheet.columns[3:13], TimeLabs))
+NewColNames = dict(zip(SST_sheet.columns[3:14], TimeLabs))
 #Change column names using dictionary
 SST_sheet.rename(columns = NewColNames, inplace = True)
 #Write file with corrected column names into a csv file for further analysis
