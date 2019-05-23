@@ -3,7 +3,7 @@
 # Author: Denisse Fierro Arcos
 # Version: 2
 # Date: 2019-05-23
-# Purpose: This scripts extracts SST values for a particular area and month(s) contained within nc files downloaded from NOAA's Aqua
+# Purpose: This scripts extracts SST values for a particular area(s) and month(s) contained within nc files downloaded from NOAA's Aqua
 # MODIS website.
 # Inputs needed:
 #   - Aqua MODIS nc file
