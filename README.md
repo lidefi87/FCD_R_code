@@ -10,3 +10,5 @@ This folder contains code in R created while working as a Marine Ecologist at th
 - TigerSharkAcousticData.R - Clean acoustic data and create a point plot with acoustic detections over time.
 
 - ExtractingSSTvalues.py - This scripts extracts SST values for a particular area(s) and month(s) contained within nc files downloaded from NOAA's Aqua MODIS website.
+
+- CheckingScientificNamesAphiaIDs.R - Checks validity of scientific names and retrieves Aphia IDs through WoRMS platform
